@@ -1,0 +1,4 @@
+
+ocraft 동작 상, onGameFullStart 이 완료된 이후에서야
+onGameStart 이 호출된다고 한다... 왜지?
+
