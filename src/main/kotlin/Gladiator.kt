@@ -1,6 +1,7 @@
 package io.iqpizza
 
 import com.github.ocraft.s2client.bot.S2Agent
+import com.github.ocraft.s2client.bot.gateway.UnitInPool
 import com.github.ocraft.s2client.protocol.game.PlayerInfo
 import com.github.ocraft.s2client.protocol.game.PlayerType
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -8,7 +9,9 @@ import io.github.oshai.kotlinlogging.Level
 import io.iqpizza.game.Game
 import io.iqpizza.game.PlayerInitializer
 import io.iqpizza.map.MapInitializer
+import io.iqpizza.map.Position
 import io.iqpizza.utils.StopWatch
+import io.iqpizza.utils.toGameUnit
 import map.SimpleArea
 import utils.generateRegions
 
@@ -100,5 +103,27 @@ class Gladiator : S2Agent() {
         stopWatch.stop()
 
         log.info { stopWatch.prettyPrint() }
+    }
+
+    /**
+     * 플레이어의 유닛이 온전히 생성 완료되었을 때 호출됩니다.
+     */
+    override fun onUnitCreated(unitInPool: UnitInPool?) {
+        val pool = unitInPool ?: return // 일반적으로 null 이 들어오는 경우는 없으나, 혹여 들어올 경우 무시
+        val unit = pool.unit()
+
+        Game.addPosition(unit.toGameUnit(), Position.fromPoint3d(unit.position))
+        log.trace { "Add player unit: $unit" }
+    }
+
+    /**
+     * 아군, 적군 가리지 않고 삭제되면 호출된다.
+     */
+    override fun onUnitDestroyed(unitInPool: UnitInPool?) {
+        val pool = unitInPool ?: return
+        val unit = pool.unit()
+
+        Game.removePosition(unit.toGameUnit())
+        log.trace { "Remove player unit: $unit" }
     }
 }
