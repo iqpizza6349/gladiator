@@ -7,6 +7,7 @@ import game.InGameClock
 import io.iqpizza.map.Position
 import io.iqpizza.map.Region
 import io.iqpizza.map.Tile
+import io.iqpizza.system.GameController
 import io.iqpizza.unit.GameUnit
 import map.RegionArea
 import kotlin.properties.Delegates
@@ -64,10 +65,15 @@ object Game {
 
     /**
      * gameClock 은 인-게임 속도의 영향을 받아 시간을 계산합니다.
-     * 주로 [TimedSystem] 에 사용되거나 현재 시간을 정확히 측정할 때 사용합니다.
+     * 주로 [io.iqpizza.system.TimedSystem] 에 사용되거나 현재 시간을 정확히 측정할 때 사용합니다.
      */
     var gameClock = InGameClock(gameSpeed.perFrameCount)
         private set
+
+    /**
+     * Agent 와 직접 소통하며, 각 시스템에서 호춯하는 컨트롤러입니다.
+     */
+    var gameController: GameController by Delegates.notNull()
 
     private val positions = mutableMapOf<GameUnit, Position>()
 

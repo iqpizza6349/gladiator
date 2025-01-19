@@ -10,6 +10,7 @@ import io.iqpizza.game.Game
 import io.iqpizza.game.PlayerInitializer
 import io.iqpizza.map.MapInitializer
 import io.iqpizza.map.Position
+import io.iqpizza.system.GameController
 import io.iqpizza.utils.StopWatch
 import io.iqpizza.utils.toGameUnit
 import map.SimpleArea
@@ -18,6 +19,10 @@ import utils.generateRegions
 class Gladiator : S2Agent() {
     companion object {
         private val log = KotlinLogging.logger("Gladiator")
+    }
+
+    init {
+        Game.gameController = GameController(this)
     }
 
     /**
