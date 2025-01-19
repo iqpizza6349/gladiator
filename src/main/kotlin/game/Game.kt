@@ -3,9 +3,11 @@ package io.iqpizza.game
 import com.github.ocraft.s2client.protocol.game.PlayerInfo
 import com.github.ocraft.s2client.protocol.game.Race
 import com.github.ocraft.s2client.protocol.game.raw.StartRaw
+import game.InGameClock
 import io.iqpizza.map.Position
 import io.iqpizza.map.Region
 import io.iqpizza.map.Tile
+import io.iqpizza.unit.GameUnit
 import map.RegionArea
 import kotlin.properties.Delegates
 
@@ -51,6 +53,32 @@ object Game {
      */
     var enemyRace: Race = Race.RANDOM
 
+    /**
+     * 인-게임 속도를 설정합니다. 게임 속도는 [gameClock] 의 영향을 미칩니다.
+     *
+     * 기본 게임 속도는 NORMAL 로 설정합니다.
+     */
+    var gameSpeed: GameSpeed by Delegates.observable(GameSpeed.NORMAL) { _, _, newSpeed ->
+        gameClock = InGameClock(newSpeed.perFrameCount)
+    }
 
+    /**
+     * gameClock 은 인-게임 속도의 영향을 받아 시간을 계산합니다.
+     * 주로 [TimedSystem] 에 사용되거나 현재 시간을 정확히 측정할 때 사용합니다.
+     */
+    var gameClock = InGameClock(gameSpeed.perFrameCount)
+        private set
+
+    private val positions = mutableMapOf<GameUnit, Position>()
+
+    fun addPosition(unit: GameUnit, position: Position) {
+        positions[unit] = position
+    }
+
+    fun getPosition(unit: GameUnit): Position? = positions[unit]
+
+    fun removePosition(unit: GameUnit) {
+        positions.remove(unit)
+    }
 
 }
