@@ -1,8 +1,12 @@
 package io.iqpizza
 
 import com.github.ocraft.s2client.bot.S2Agent
+import com.github.ocraft.s2client.protocol.game.PlayerInfo
+import com.github.ocraft.s2client.protocol.game.PlayerType
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.oshai.kotlinlogging.Level
 import io.iqpizza.game.Game
+import io.iqpizza.game.PlayerInitializer
 import io.iqpizza.map.MapInitializer
 import io.iqpizza.utils.StopWatch
 import map.SimpleArea
@@ -59,7 +63,8 @@ class Gladiator : S2Agent() {
      */
     override fun onGameFullStart() {
         val stopWatch = StopWatch("onGameFullStart")
-        val mapInitializer = MapInitializer(stopWatch)
+        stopWatch.start("Map Initializing")
+        val mapInitializer = MapInitializer()
 
         mapInitializer.initializeMapInformation(observation())
         val allTiles = mapInitializer.initializeAllTiles { point ->
@@ -69,9 +74,31 @@ class Gladiator : S2Agent() {
 
         Game.allTiles = allTiles    // 반드시 인접한 Tile 들을 갱신한 이후
 
-        mapInitializer.logDetailResult()
-        mapInitializer.logResult()
+        mapInitializer.logDetailResult(Level.DEBUG)
 
         log.info { "mapName: ${Game.mapName}, Size: (${Game.mapWidth}, ${Game.mapHeight}})" }
+        stopWatch.stop()
+
+        stopWatch.start("Player Race Initializing")
+        val playerInitializer = PlayerInitializer()
+
+        Game.selfId = observation().playerId
+        Game.players = observation().gameInfo.playersInfo
+
+        playerInitializer.initializeRace(playerId = Game.selfId) { Game.playerRace = it }
+        log.debug { "playerRace: ${Game.playerRace}" }
+
+        val enemyId = { player: PlayerInfo ->
+            player.playerType.get() != PlayerType.OBSERVER
+                    && player.playerId != Game.selfId
+        }
+        playerInitializer.initializeRace(playerClause = enemyId) { Game.enemyRace = it }
+        log.debug { "enemyRace: ${Game.enemyRace}" }
+
+        playerInitializer.logDetailResult(Level.DEBUG)
+        log.info { "PlayerRace: ${Game.playerRace} VS EnemyRace: ${Game.enemyRace}" }
+        stopWatch.stop()
+
+        log.info { stopWatch.prettyPrint() }
     }
 }

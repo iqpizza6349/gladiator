@@ -1,12 +1,12 @@
 package io.iqpizza.game
 
+import com.github.ocraft.s2client.protocol.game.PlayerInfo
 import com.github.ocraft.s2client.protocol.game.Race
 import com.github.ocraft.s2client.protocol.game.raw.StartRaw
 import io.iqpizza.map.Position
 import io.iqpizza.map.Region
 import io.iqpizza.map.Tile
 import map.RegionArea
-import io.iqpizza.utils.StopWatch
 import kotlin.properties.Delegates
 
 object Game {
@@ -28,6 +28,16 @@ object Game {
      * 기본적인 게임 시작과 동시에 raw 하게 얻는 데이터
      */
     lateinit var startRaw: StartRaw
+
+    /**
+     * Player, Computer, Observer 모두 포함
+     */
+    lateinit var players: Set<PlayerInfo>
+
+    /**
+     * player id
+     */
+    var selfId by Delegates.notNull<Int>()
 
     /**
      * 플레이어(클라이언트)의 종족

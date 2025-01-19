@@ -389,6 +389,18 @@ public class StopWatch {
 		return sb.toString();
 	}
 
+	public void reset() {
+		if (isRunning()) {
+			throw new IllegalStateException("StopWatch is running, so unavailable to reset.");
+		}
+
+		taskList = new ArrayList<>(1);
+		startTimeNanos = 0;
+		currentTaskName = null;
+		lastTaskInfo = null;
+		taskCount = 0;
+		totalTimeNanos = 0;
+	}
 
 	/**
 	 * Nested class to hold data about one task executed within the {@code StopWatch}.

@@ -3,8 +3,9 @@ package io.iqpizza.map
 import com.github.ocraft.s2client.bot.gateway.ObservationInterface
 import com.github.ocraft.s2client.protocol.spatial.Point
 import com.github.ocraft.s2client.protocol.spatial.Point2d
+import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.oshai.kotlinlogging.Level
+import io.iqpizza.GameInitializer
 import io.iqpizza.game.Game
 import io.iqpizza.utils.StopWatch
 import map.SimpleArea
@@ -13,16 +14,10 @@ import utils.analyzeChokePoints
 import utils.generateAllTiles
 import utils.initializeAreas
 
-class MapInitializer(private val stopWatch: StopWatch) {
-    companion object {
-        private val supportsLevel = arrayOf(
-            Level.INFO,
-            Level.WARN,
-            Level.TRACE,
-        )
-    }
-
+class MapInitializer(stopWatch: StopWatch = StopWatch("MapInitializer")) : GameInitializer(stopWatch) {
     private val logger = KotlinLogging.logger("MapInitializer-${stopWatch.id}")
+
+    override fun logger(): KLogger = logger
 
     /**
      * MapName, MapHeight, MapWidth 를 초기화하는 메소드입니다.
@@ -103,29 +98,5 @@ class MapInitializer(private val stopWatch: StopWatch) {
             (tile == null || !tile.walkable)
         }).toList()
         stopWatch.stop()
-    }
-
-    fun logDetailResult(level: Level = Level.INFO) {
-        when (level) {
-            Level.TRACE -> logger.trace { stopWatch.prettyPrint() }
-            Level.DEBUG -> logger.debug { stopWatch.prettyPrint() }
-            Level.INFO  -> logger.info { stopWatch.prettyPrint() }
-            else        -> return
-        }
-    }
-
-    fun logResult(level: Level = Level.INFO) {
-        if (level !in supportsLevel) {
-            throw IllegalArgumentException("Level $level is not supported")
-        }
-
-        val message = "'${stopWatch.id}' takes ${stopWatch.totalTimeMillis} ms. (Total Tasks: ${stopWatch.taskCount})"
-
-        when (level) {
-            Level.TRACE -> logger.trace { message }
-            Level.DEBUG -> logger.debug { message }
-            Level.INFO  -> logger.info { message }
-            else        -> return
-        }
     }
 }
