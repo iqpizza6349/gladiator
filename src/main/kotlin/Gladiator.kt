@@ -11,6 +11,8 @@ import io.iqpizza.game.PlayerInitializer
 import io.iqpizza.map.MapInitializer
 import io.iqpizza.map.Position
 import io.iqpizza.system.GameController
+import io.iqpizza.system.TimedSystem
+import io.iqpizza.system.unit.UnitSystem
 import io.iqpizza.utils.StopWatch
 import io.iqpizza.utils.toGameUnit
 import map.SimpleArea
@@ -20,6 +22,7 @@ class Gladiator : S2Agent() {
     companion object {
         private val log = KotlinLogging.logger("Gladiator")
     }
+    private val positionSystem = TimedSystem(Game.gameClock, 0.25, UnitSystem::updatePosition)
 
     init {
         Game.gameController = GameController(this)
@@ -118,6 +121,7 @@ class Gladiator : S2Agent() {
         val unit = pool.unit()
 
         Game.addPosition(unit.toGameUnit(), Position.fromPoint3d(unit.position))
+        Game.addOwner(unit.toGameUnit())
         log.trace { "Add player unit: $unit" }
     }
 
@@ -128,7 +132,14 @@ class Gladiator : S2Agent() {
         val pool = unitInPool ?: return
         val unit = pool.unit()
 
-        Game.removePosition(unit.toGameUnit())
+        Game.removeAll(unit.toGameUnit())
         log.trace { "Remove player unit: $unit" }
+    }
+
+    override fun onStep() {
+        val gameLoop = observation().gameLoop
+
+        // Position 으로 유닛 존재 유무와도 밀접한 관계가 존재하므로 반드시 먼저 수행한다.
+        positionSystem.update(gameLoop)
     }
 }
