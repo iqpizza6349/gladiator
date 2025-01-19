@@ -3,12 +3,14 @@ package io.iqpizza.game
 import com.github.ocraft.s2client.protocol.game.PlayerInfo
 import com.github.ocraft.s2client.protocol.game.Race
 import com.github.ocraft.s2client.protocol.game.raw.StartRaw
+import com.github.ocraft.s2client.protocol.unit.Alliance
 import game.InGameClock
 import io.iqpizza.map.Position
 import io.iqpizza.map.Region
 import io.iqpizza.map.Tile
 import io.iqpizza.system.GameController
 import io.iqpizza.unit.GameUnit
+import io.iqpizza.unit.Owner
 import map.RegionArea
 import kotlin.properties.Delegates
 
@@ -76,6 +78,7 @@ object Game {
     var gameController: GameController by Delegates.notNull()
 
     private val positions = mutableMapOf<GameUnit, Position>()
+    private val owners = mutableMapOf<GameUnit, Owner>()
 
     fun addPosition(unit: GameUnit, position: Position) {
         positions[unit] = position
@@ -87,4 +90,29 @@ object Game {
         positions.remove(unit)
     }
 
+    fun addOwner(unit: GameUnit, owner: Owner = Owner.SELF) {
+        owners[unit] = owner
+    }
+
+    private fun removeOwner(unit: GameUnit) {
+        // Owner 를 삭제해야할 때에는 유닛이 죽었을 때만 적용한다.
+        owners.remove(unit)
+    }
+
+    fun removeAll(unit: GameUnit) {
+        removeOwner(unit)
+        removePosition(unit)
+    }
+
+    fun getPlayerUnits(alliance: Alliance = Alliance.SELF): Set<GameUnit> {
+        return getAllUnits().filter { unit ->
+            owners[unit]?.alliance == alliance
+        }.toSet()
+    }
+
+    fun getAllUnits(): Set<GameUnit> {
+        return positions.keys.toSet()
+    }
+
+    fun getPositions() = positions.entries
 }
