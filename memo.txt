@@ -5,4 +5,7 @@ onGameStart 이 호출된다고 한다... 왜지?
 
 2025.01.19
 Completed: Unit position update
-TODO: Train Unit(Worker)
+
+2025.01.25
+Completed: Unit Training
+TODO: Build Unit(SupplyDepot)
