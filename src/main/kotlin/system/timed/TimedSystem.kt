@@ -1,7 +1,8 @@
-package io.iqpizza.system
+package io.iqpizza.system.timed
 
 import game.InGameClock
 import io.iqpizza.game.Game
+import io.iqpizza.system.GameController
 
 class TimedSystem (
     private val gameClock: InGameClock,

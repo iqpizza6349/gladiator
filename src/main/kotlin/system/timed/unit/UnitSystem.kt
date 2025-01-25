@@ -1,4 +1,4 @@
-package io.iqpizza.system.unit
+package io.iqpizza.system.timed.unit
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.iqpizza.game.Game
