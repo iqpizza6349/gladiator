@@ -2,6 +2,8 @@ package io.iqpizza.unit
 
 import com.github.ocraft.s2client.bot.gateway.UnitInPool
 import com.github.ocraft.s2client.protocol.data.Units
+import com.github.ocraft.s2client.protocol.unit.Alliance
+import com.github.ocraft.s2client.protocol.unit.Unit
 
 object Filters {
     private val workers = arrayOf(
@@ -95,5 +97,23 @@ object Filters {
         return optional.filter {
             it.type in terranBuildings || it.type in zergBuildings || it.type in protossBuildings
         }.isPresent
+    }
+
+    fun isUnitType(unit: UnitInPool, unitTypes: Collection<Units>, alliance: Alliance = Alliance.SELF): Boolean {
+        val optional = unit.unit ?: return false
+        return optional.filter {
+            it.type in unitTypes && it.alliance.equals(alliance)
+        }.isPresent
+    }
+
+    fun isIdle(unit: UnitInPool): Boolean {
+        val optional = unit.unit ?: return false
+        return optional.filter {
+            it.orders.isEmpty() && isBuildingComplete(it)
+        }.isPresent
+    }
+
+    private fun isBuildingComplete(unit: Unit): Boolean {
+        return unit.buildProgress == 1.0F
     }
 }
