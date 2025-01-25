@@ -1,6 +1,5 @@
 package io.iqpizza.system.timed.unit
 
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.iqpizza.game.Game
 import io.iqpizza.map.Position
 import io.iqpizza.system.GameController
@@ -8,8 +7,6 @@ import io.iqpizza.unit.Filters
 import io.iqpizza.utils.toGameUnit
 
 object UnitSystem {
-    private val logger = KotlinLogging.logger("UnitSystem")
-
     /**
      * 플레이어의 유닛(건물 제외)들의 위치를 갱신한다.
      */
