@@ -2,7 +2,7 @@ package io.iqpizza
 
 import com.github.ocraft.s2client.bot.S2Agent
 import com.github.ocraft.s2client.bot.gateway.UnitInPool
-import com.github.ocraft.s2client.protocol.data.Units
+import com.github.ocraft.s2client.protocol.data.Abilities
 import com.github.ocraft.s2client.protocol.game.PlayerInfo
 import com.github.ocraft.s2client.protocol.game.PlayerType
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -16,7 +16,7 @@ import io.iqpizza.system.CommandType
 import io.iqpizza.system.GameController
 import io.iqpizza.system.command.unit.UnitTrainSystem
 import io.iqpizza.system.timed.TimedSystem
-import io.iqpizza.system.timed.unit.UnitSystem
+import io.iqpizza.system.unit.UnitSystem
 import io.iqpizza.unit.GameUnit
 import io.iqpizza.utils.StopWatch
 import io.iqpizza.utils.toGameUnit
@@ -152,8 +152,19 @@ class Gladiator : S2Agent() {
         // Position 으로 유닛 존재 유무와도 밀접한 관계가 존재하므로 반드시 먼저 수행한다.
         positionSystem.update(gameLoop)
 
-        if ((gameLoop % 120).toInt() == 0) {
-            commandManager.addCommand(Command(type = CommandType.TRAIN, data = Pair(GameUnit.DUMMY, Units.TERRAN_SCV)))
+        if ((gameLoop % 22).toInt() == 0) {
+            if (Game.gameController.fetchWorkerSupply() > 22) {
+                return
+            }
+
+            val workerTrainCommand = Command(
+                type = CommandType.TRAIN,
+                data = Pair(GameUnit.DUMMY, Abilities.TRAIN_SCV)
+            )
+
+            commandManager.addCommand(workerTrainCommand) { controller, data ->
+                UnitSystem.trainUnit(controller, data)
+            }
             log.debug { "Request Train SCV at $gameLoop " }
         }
     }

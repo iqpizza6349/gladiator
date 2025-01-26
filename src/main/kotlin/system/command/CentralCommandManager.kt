@@ -1,22 +1,25 @@
 package system.command
 
-import io.iqpizza.system.Command
+import io.iqpizza.system.*
 import io.iqpizza.system.command.CommandSystem
-import io.iqpizza.system.CommandType
+import io.iqpizza.system.command.CommandProcessor
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.util.PriorityQueue
 
 class CentralCommandManager {
     private val log: Logger = LoggerFactory.getLogger(CentralCommandManager::class.java)
 
     // 큐 분리
-    private val movementQueue = PriorityQueue<Command> { c1, c2 -> c1.priority.compareTo(c2.priority) }
-    private val buildQueue = PriorityQueue<Command> { c1, c2 -> c1.priority.compareTo(c2.priority) }
+    private val behaviorQueue = mutableListOf<Action>()
+    private val buildQueue = mutableListOf<Action>()
+
+    private val behaviorMutex = Mutex()
+    private val buildMutex = Mutex()
 
     private val commandSystems = mutableListOf<CommandSystem>()
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(Dispatchers.Default)
 
     private var started: Boolean = false
 
@@ -26,25 +29,44 @@ class CentralCommandManager {
     }
 
     // Command 추가
-    fun addCommand(command: Command) {
+    fun addCommand(command: Command, behavior: Behavior) {
+        val action = createAction(command, behavior)
         when (command.type) {
-            CommandType.MOVE, CommandType.ATTACK                                           -> movementQueue.add(command)
-            CommandType.RESEARCH, CommandType.BUILD, CommandType.TRAIN, CommandType.SUPPLY -> buildQueue.add(command)
+            CommandType.MOVE, CommandType.ATTACK                                           -> {
+                synchronized(behaviorQueue) {
+                    behaviorQueue.add(action)
+                    behaviorQueue.sortBy { it.command.priority }
+                }
+            }
+
+            CommandType.RESEARCH, CommandType.BUILD, CommandType.TRAIN, CommandType.SUPPLY -> {
+                synchronized(buildQueue) {
+                    buildQueue.add(action)
+                    behaviorQueue.sortBy { it.command.priority }
+                }
+            }
         }
         log.info("Added Command: {}", command)
     }
 
-    // Command 취소
-    fun cancelCommand(command: Command) {
-        when (command.type) {
-            CommandType.MOVE, CommandType.ATTACK                                           -> movementQueue.remove(
-                command
-            )
-
-            CommandType.RESEARCH, CommandType.BUILD, CommandType.TRAIN, CommandType.SUPPLY -> buildQueue.remove(command)
-        }
-        log.info("Cancelled Command: {}", command)
+    private fun createAction(command: Command, execute: Behavior): Action {
+        return Action(
+            command = command,
+            execute = execute
+        )
     }
+
+    // Command 취소
+//    fun cancelCommand(command: Command) {
+//        when (command.type) {
+//            CommandType.MOVE, CommandType.ATTACK                                           -> behaviorQueue.remove(
+//                command
+//            )
+//
+//            CommandType.RESEARCH, CommandType.BUILD, CommandType.TRAIN, CommandType.SUPPLY -> buildQueue.remove(command)
+//        }
+//        log.info("Cancelled Command: {}", command)
+//    }
 
     fun startProcessing() {
         if (started) {
@@ -53,29 +75,11 @@ class CentralCommandManager {
 
         started = true
 
-        scope.launch { processQueue(movementQueue, "Movement Queue") }
-        scope.launch { processQueue(buildQueue, "Build Queue") }
-    }
+        val behaviorProcessor = CommandProcessor(behaviorQueue, behaviorMutex, commandSystems.toList())
+        val buildProcessor = CommandProcessor(buildQueue, buildMutex, commandSystems.toList())
 
-    private suspend fun processQueue(queue: PriorityQueue<Command>, queueName: String) {
-        while (true) {
-            if (queue.isNotEmpty()) {
-                val command = queue.peek()
-                val system = commandSystems.find { it.canExecute(command) }
-
-                if (system != null) {
-                    if (system.execute(command)) {
-                        log.info("Executed $queueName Command: {}", command)
-                        queue.peek()
-                    } else {
-                        log.warn("Failed to execute $queueName Command: {}", command)
-                    }
-                } else {
-                    log.warn("No system available to execute $queueName Command: {}", command)
-                }
-            }
-            delay(100) // Queue 체크 주기
-        }
+        scope.launch { behaviorProcessor.processCommands() }
+        scope.launch { buildProcessor.processCommands() }
     }
 
     fun stopProcessing() {
