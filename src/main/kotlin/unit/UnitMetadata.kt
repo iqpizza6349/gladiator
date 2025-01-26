@@ -1,5 +1,6 @@
 package io.iqpizza.unit
 
+import com.github.ocraft.s2client.protocol.data.Abilities
 import com.github.ocraft.s2client.protocol.data.Units
 
 /**
@@ -7,9 +8,18 @@ import com.github.ocraft.s2client.protocol.data.Units
  * 메타 데이터들입니다.
  * 참고로 `supplyCost` 계산 시, 저글링의 경우 1개이든 2개이든 1로 간주합니다.
  */
-enum class UnitMetadata(val type: Units, val mineralCost: Int = 0, val gasCost: Int = 0, val supplyCost: Int = 1) {
+enum class UnitMetadata(
+    val type: Units,
+    val mineralCost: Int = 0,
+    val gasCost: Int = 0,
+    val supplyCost: Int = 1,
+    /**
+     * 생성하는 Ability
+     */
+    val bornAbility: Abilities = Abilities.INVALID
+) {
     UNKNOWN(type = Units.INVALID),
-    SCV(type = Units.TERRAN_SCV, mineralCost = 50)
+    SCV(type = Units.TERRAN_SCV, mineralCost = 50, bornAbility = Abilities.TRAIN_SCV)
     ;
 
     companion object {
@@ -17,6 +27,17 @@ enum class UnitMetadata(val type: Units, val mineralCost: Int = 0, val gasCost: 
             val unitMetadata = UnitMetadata.entries.toTypedArray()
             for (metaData in unitMetadata) {
                 if (type === metaData.type) {
+                    return metaData
+                }
+            }
+
+            return UNKNOWN
+        }
+
+        fun findMetaData(ability: Abilities): UnitMetadata {
+            val unitMetadata = UnitMetadata.entries.toTypedArray()
+            for (metaData in unitMetadata) {
+                if (ability === metaData.bornAbility) {
                     return metaData
                 }
             }
