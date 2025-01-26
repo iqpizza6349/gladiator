@@ -1,10 +1,14 @@
-package io.iqpizza.system.timed.unit
+package io.iqpizza.system.unit
 
+import com.github.ocraft.s2client.protocol.data.Abilities
 import io.iqpizza.game.Game
 import io.iqpizza.map.Position
 import io.iqpizza.system.GameController
 import io.iqpizza.unit.Filters
+import io.iqpizza.unit.GameUnit
 import io.iqpizza.utils.toGameUnit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 object UnitSystem {
     /**
@@ -31,6 +35,18 @@ object UnitSystem {
                 // 실제 데이터가 누락된 경우, 죽은 것과 동일 취급한다.
                 Game.removeAll(unit.tag.toGameUnit())
             })
+        }
+    }
+
+    /**
+     * 유닛을 생산한다.
+     */
+    suspend fun trainUnit(gameController: GameController, data: Pair<GameUnit, Abilities>): Boolean {
+        return withContext(Dispatchers.IO) {
+            val desireAbility = data.second
+            val availableUnits = Filters.getAvailableUnits(desireAbility)
+            val fetchUnit = gameController.fetchUnit(availableUnits)
+            gameController.trainUnit(fetchUnit, desireAbility)
         }
     }
 }
