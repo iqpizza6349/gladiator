@@ -51,14 +51,18 @@ class GameController(private val agent: S2Agent) {
         return currentMineral >= requiredMinerals && currentVespene >= requiredVespene
     }
 
-    fun trainUnit(issuers: Collection<Units>, desireTo: Abilities) : Boolean {
+    fun trainUnit(issuers: Collection<UnitInPool>, desireTo: Abilities) : Boolean {
         val idleUnit = fetchIdleUnit(issuers) ?: return false
-        agent.actions().unitCommand(idleUnit, desireTo, true)
+        return trainUnit(idleUnit, desireTo)
+    }
+
+    fun trainUnit(issuer: Unit, desireTo: Abilities) : Boolean {
+        agent.actions().unitCommand(issuer, desireTo, true)
         return true
     }
 
-    fun fetchIdleUnit(unitTypes: Collection<Units>): Unit? {
-        val filter = fetchUnit(unitTypes).filter { Filters.isIdle(it) }
+    fun fetchIdleUnit(units: Collection<UnitInPool>): Unit? {
+        val filter = units.filter { Filters.isIdle(it) }
         val unitInPool = filter.firstOrNull() ?: return null
         val idleUnit = unitInPool.unit ?: return null
         return  idleUnit.get()
