@@ -1,6 +1,7 @@
 package io.iqpizza.unit
 
 import com.github.ocraft.s2client.bot.gateway.UnitInPool
+import com.github.ocraft.s2client.protocol.data.Abilities
 import com.github.ocraft.s2client.protocol.data.Units
 import com.github.ocraft.s2client.protocol.unit.Alliance
 import com.github.ocraft.s2client.protocol.unit.Unit
@@ -115,5 +116,18 @@ object Filters {
 
     private fun isBuildingComplete(unit: Unit): Boolean {
         return unit.buildProgress == 1.0F
+    }
+
+    fun getAvailableUnits(desireAbility: Abilities): Set<Units> {
+        val availableUnits = mutableSetOf<Units>()
+
+        val allUnitTypes = Units.entries.toTypedArray()
+        for (unitType in allUnitTypes) {
+            if (desireAbility in unitType.abilities) {
+                availableUnits.add(unitType)
+            }
+        }
+
+        return availableUnits
     }
 }
